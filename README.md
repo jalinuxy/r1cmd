@@ -1,4 +1,4 @@
-# r1 — Arvan Storage CLI
+# r1cmd — Arvan Storage CLI
 
 <p align="center">
   <strong>ابزار ساده برای مدیریت فایل‌ها در فضای ابری آروان</strong><br>
