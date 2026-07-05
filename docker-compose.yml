@@ -1,0 +1,23 @@
+services:
+  r1:
+    build: .
+    image: jalinuxy/r1cmd:latest
+    container_name: r1cmd
+    stdin_open: true
+    tty: true
+    working_dir: /data
+    volumes:
+      # Saved credentials from `r1 setup`
+      - ${R1_CONFIG_DIR:-~/.config/r1cmd}:/config/r1cmd
+      # Current directory — upload/download files from here
+      - ${R1_DATA_DIR:-.}:/data
+    environment:
+      # Optional: skip `r1 setup` and pass credentials directly
+      - ARVAN_ACCESS_KEY_ID=${ARVAN_ACCESS_KEY_ID:-}
+      - ARVAN_SECRET_ACCESS_KEY=${ARVAN_SECRET_ACCESS_KEY:-}
+      - ARVAN_SPACE=${ARVAN_SPACE:-}
+    # Examples:
+    #   docker compose run --rm r1 setup
+    #   docker compose run --rm r1 upload photo.jpg
+    #   docker compose run --rm r1
+    command: []
