@@ -86,7 +86,8 @@ Works on Linux and macOS with Python 3.9+:
 curl -fsSL https://jalinuxy.ir/r1cmd | sh
 ```
 
-The script installs `r1cmd` from PyPI (or GitHub if PyPI is unavailable) into `~/.local/bin`.  
+**Default:** installs at **user level** — command at `~/.local/bin/r1`, isolated venv at `~/.local/share/r1cmd/venv` (works on Ubuntu/Debian PEP 668, no `sudo`).
+
 If `r1` is not found afterward, add this to your shell profile:
 
 ```bash
@@ -98,6 +99,20 @@ Pin a version:
 ```bash
 curl -fsSL https://jalinuxy.ir/r1cmd | R1CMD_VERSION=0.2.0 sh
 ```
+
+#### Other install modes (optional)
+
+The one-liner above already uses `--user`. Change mode only if you need to:
+
+| Mode | Command |
+|------|---------|
+| User (default) | `curl -fsSL https://jalinuxy.ir/r1cmd \| sh` |
+| Virtualenv | `curl -fsSL https://jalinuxy.ir/r1cmd \| sh -s -- --venv` |
+| System Python | `curl -fsSL https://jalinuxy.ir/r1cmd \| sh -s -- --system` |
+
+When you clone the repo, `./install.sh` defaults to **venv** (`.venv/` in the project folder).
+
+**نصب پیش‌فرض با curl:** در سطح کاربر (`~/.local/bin`) — بدون نیاز به هیچ فلگ اضافه.
 
 ### Option 2 — pip
 

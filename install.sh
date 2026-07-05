@@ -2,7 +2,7 @@
 # Install r1cmd — works from a git clone or: curl -fsSL https://jalinuxy.ir/r1cmd | sh
 set -eu
 
-# Resolve script directory (when piped via curl | sh, $0 is "sh" — cwd is fine)
+# When piped via curl | sh, $0 is "sh" — cwd is fine for remote install
 if [ -n "${0##*/*}" ] || [ "$0" = "sh" ] || [ "$0" = "dash" ] || [ "$0" = "bash" ]; then
     ROOT="$(pwd)"
 else
@@ -10,6 +10,8 @@ else
 fi
 
 VENV_DIR="${R1_VENV_DIR:-$ROOT/.venv}"
+USER_VENV="${R1_USER_VENV:-$HOME/.local/share/r1cmd/venv}"
+USER_BIN="$HOME/.local/bin"
 MIN_PYTHON="3.9"
 INSTALL_MODE=""
 WITH_DEV=0
@@ -22,13 +24,13 @@ Usage: ./install.sh [options]
 
 Install the r1 CLI (r1cmd) for ArvanCloud Object Storage.
 
-Quick install (from the internet):
+Quick install (from the internet, user-level by default):
   curl -fsSL https://jalinuxy.ir/r1cmd | sh
 
 Options:
-  --user        Install into ~/.local (good for curl | sh)
-  --system      Install into the active Python (requires write access)
+  --user        Install into ~/.local/bin (default for curl | sh)
   --venv        Install into a virtualenv (default when run from a git clone)
+  --system      Install into the active Python (requires write access)
   --dev         Also install development dependencies (pytest, moto)
   --venv-path   Custom virtualenv directory (default: .venv next to install.sh)
   -h, --help    Show this help
@@ -52,10 +54,6 @@ is_local_clone() {
     [ -f "$ROOT/pyproject.toml" ]
 }
 
-is_piped_install() {
-    [ ! -t 0 ]
-}
-
 while [ "$#" -gt 0 ]; do
     case "$1" in
         --user)   INSTALL_MODE="user"; shift ;;
@@ -72,6 +70,7 @@ while [ "$#" -gt 0 ]; do
     esac
 done
 
+# curl | sh → user-level; git clone + ./install.sh → venv
 if [ -z "$INSTALL_MODE" ]; then
     if is_local_clone; then
         INSTALL_MODE="venv"
@@ -122,11 +121,25 @@ pip_spec() {
 run_pip() {
     if [ "$USE_VENV_PIP" -eq 1 ]; then
         pip install "$@"
-    elif [ "$USE_USER_PIP" -eq 1 ]; then
-        "$PYTHON" -m pip install --user "$@"
     else
         "$PYTHON" -m pip install "$@"
     fi
+}
+
+setup_user_install() {
+    log "Install mode: user (~/.local/bin)"
+    if [ ! -d "$USER_VENV" ]; then
+        log "Creating user venv at $USER_VENV"
+        if ! "$PYTHON" -m venv "$USER_VENV" 2>/dev/null; then
+            fail "Could not create venv. Install: sudo apt install python3-venv python3-full"
+        fi
+    else
+        log "Reusing user venv at $USER_VENV"
+    fi
+    PATH="$USER_VENV/bin:$PATH"
+    USE_VENV_PIP=1
+    mkdir -p "$USER_BIN"
+    ln -sf "$USER_VENV/bin/r1" "$USER_BIN/r1"
 }
 
 install_remote_package() {
@@ -165,12 +178,7 @@ PYTHON=$(find_python) || fail "Python $MIN_PYTHON or newer not found. Install it
 
 log "Using $PYTHON ($($PYTHON --version 2>&1))"
 
-if is_piped_install && ! is_local_clone; then
-    log "Remote install (curl | sh)"
-fi
-
 USE_VENV_PIP=0
-USE_USER_PIP=0
 activate_hint=""
 
 case "$INSTALL_MODE" in
@@ -186,7 +194,7 @@ case "$INSTALL_MODE" in
         activate_hint="source \"$VENV_DIR/bin/activate\""
         ;;
     user)
-        USE_USER_PIP=1
+        setup_user_install
         ;;
     system)
         ;;
@@ -210,8 +218,10 @@ if command -v r1 >/dev/null 2>&1; then
     R1_BIN=$(command -v r1)
 elif [ -x "${VENV_DIR}/bin/r1" ]; then
     R1_BIN="$VENV_DIR/bin/r1"
-elif [ -x "$HOME/.local/bin/r1" ]; then
-    R1_BIN="$HOME/.local/bin/r1"
+elif [ -x "$USER_BIN/r1" ]; then
+    R1_BIN="$USER_BIN/r1"
+elif [ -x "$USER_VENV/bin/r1" ]; then
+    R1_BIN="$USER_VENV/bin/r1"
 else
     fail "Install finished but 'r1' command was not found on PATH."
 fi
