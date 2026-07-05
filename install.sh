@@ -8,7 +8,7 @@ MIN_PYTHON="3.9"
 INSTALL_MODE=""   # venv | user | system — empty = auto
 WITH_DEV=0
 R1CMD_REPO="${R1CMD_REPO:-https://github.com/jalinuxy/r1cmd.git}"
-R1CMD_VERSION="${R1CMD_VERSION:-}"   # e.g. 0.2.0 or main
+R1CMD_VERSION="${R1CMD_VERSION:-}"
 
 usage() {
     cat <<'EOF'
