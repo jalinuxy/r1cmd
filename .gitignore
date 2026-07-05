@@ -30,7 +30,6 @@ venv/
 .venv/
 env/
 .env
-r1cmd/
 
 # IDE / Editor
 .vscode/

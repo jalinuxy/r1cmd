@@ -1,0 +1,6 @@
+#!/home/masoud/workspace/arvan-storage-cli/r1cmd/bin/python3
+import sys
+from r1cmd.cli import main
+if __name__ == '__main__':
+    sys.argv[0] = sys.argv[0].removesuffix('.exe')
+    sys.exit(main())
